@@ -136,7 +136,7 @@ class Dashboard:
                 <div style="background-color:#e9f7fd; height: 200px; padding:20px; border-radius:10px;
                 border: 1.5px solid #94a8b0; box-shadow:0 2px 4px #6a787e;">
                     <h5>Consumo total em R$</h5>
-                    <p style="font-size:28px; font-weight:bold; color:#e98d2c;">Box {valor_gasto}</p>
+                    <p style="font-size:28px; font-weight:bold; color:#e98d2c;">{valor_gasto}</p>
                     <p style="color:#151819;">Atualizado às {datetime.today().strftime('%H:%M')}</p>
                 </div>
             """, unsafe_allow_html=True)
