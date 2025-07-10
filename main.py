@@ -81,8 +81,8 @@ class Dashboard:
         df = self.df
 
         opcoes = {
-            'Mês': sorted(df['MES_ANO'].unique()) + ['Todos'],
-            'Grupo': ['Todos'] + sorted(df['NOME REDUZIDO'].unique())
+            'Mês': ['Todos'] + sorted(df['MES_ANO'].unique()),
+            'Empresa': ['Todos'] + sorted(df['NOME REDUZIDO'].unique())
         }
 
         return opcoes
@@ -173,11 +173,11 @@ class Dashboard:
 
     def apresentar_grafico(self, df_filtrado):
         st.markdown('---')
-        col1, col2 = st.columns(2)
+        col1, col2, col3 = st.columns(3)
 
         with st.container(border=True):
             with col1:
-                st.subheader('Litros/mês')
+                st.subheader('Consumo mensal em litros')
                 df_litro_mes = df_filtrado.groupby('MES_ANO')['LITROS'].sum().reset_index()
                 fig = px.bar(df_litro_mes, x='MES_ANO', y='LITROS', text='LITROS')
                 fig.update_layout(xaxis_title='Mês', yaxis_title='Litros', xaxis=dict(
@@ -192,19 +192,20 @@ class Dashboard:
                 fig.update_layout(xaxis_title='Mês', yaxis_title='Litros')
                 st.plotly_chart(fig)
 
-        with st.container(border=True):
-            st.subheader('Litros por dia')
-            df_custo_dia = df_filtrado.groupby(df_filtrado['DATA TRANSACAO'].dt.day)['LITROS'].sum().reset_index()
-            fig = px.line(df_custo_dia, x='DATA TRANSACAO', y='LITROS', line_shape='spline')
-            fig.update_layout(xaxis_title='Dia', yaxis_title='Litros',
-                              xaxis=dict(tickmode='array', tickvals=df_custo_dia['DATA TRANSACAO'].tolist(),
-                                         ticktext=df_custo_dia['DATA TRANSACAO'].tolist()))
-            st.plotly_chart(fig)
+            with col3:
+                st.subheader('Custo mensal')
+                df_litro_mes = df_filtrado.groupby('MES_ANO')['VALOR EMISSAO'].sum().reset_index()
+                fig = px.bar(df_litro_mes, x='MES_ANO', y='VALOR EMISSAO', text='VALOR EMISSAO')
+                fig.update_layout(xaxis_title='Mês', yaxis_title='Litros', xaxis=dict(
+                    tickmode='array', tickvals=df_litro_mes['MES_ANO'].tolist(),
+                    ticktext=df_litro_mes['MES_ANO'].tolist()))
+                fig.update_traces(textposition='outside')
+                st.plotly_chart(fig)
 
     def apresentar_tabela(self, df_filtrado):
 
         df_filtrado.rename(columns={
-            'NOME REDUZIDO': 'Grupo',
+            'NOME REDUZIDO': 'Empresa',
             'DATA TRANSACAO': 'Data',
             'PLACA': 'Placa',
             'MODELO VEICULO': 'Modelo',
