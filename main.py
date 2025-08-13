@@ -5,20 +5,20 @@ from datetime import datetime
 
 
 def criar_dashboard():
-    st.set_page_config(page_title='Abastecimento braveo 2025', layout='wide')
+    st.set_page_config(page_title='Abastecimento braveo', layout='wide')
     st.markdown(
         """
         <style>
         .main {
             max-width: 80vw;
-            margin: auto;
+            margin: auto    ;
         }
         </style>
         """,
         unsafe_allow_html=True
     )
 
-    st.title('Consumo combustível 2025')
+    st.title('Consumo combustível')
 
 
 class Relatorio:
@@ -88,12 +88,11 @@ class Dashboard:
         return opcoes
 
     def mostrar_filtros(self, opcoes_dict):
+        st.sidebar.title("Filtros")
         selecoes = {}
-        colunas = st.columns(len(opcoes_dict))
 
-        for (nome, opcao), col in zip(opcoes_dict.items(), colunas):
-            with col:
-                selecoes[nome] = st.selectbox(nome, opcao, key=f"select_{nome}")
+        for nome, opcao in opcoes_dict.items():
+            selecoes[nome] = st.sidebar.selectbox(nome, opcao, key=f"select_{nome}")
 
         return selecoes
 
@@ -133,73 +132,98 @@ class Dashboard:
 
         with col1:
             st.markdown(f"""
-                <div style="background-color:#e9f7fd; height: 200px; padding:20px; border-radius:10px;
+                <div style="background-color:#e9f7fd; height: 150px; padding:20px; border-radius:10px;
                 border: 1.5px solid #94a8b0; box-shadow:0 2px 4px #6a787e;">
                     <h5>Consumo total em R$</h5>
                     <p style="font-size:28px; font-weight:bold; color:#e98d2c;">{valor_gasto}</p>
-                    <p style="color:#151819;">Atualizado às {datetime.today().strftime('%H:%M')}</p>
                 </div>
             """, unsafe_allow_html=True)
 
         with col2:
             st.markdown(f"""
-                <div style="background-color:#e9f7fd; height: 200px; padding:20px; border-radius:10px;
+                <div style="background-color:#e9f7fd; height: 150px; padding:20px; border-radius:10px;
                 border: 1.5px solid #94a8b0; box-shadow:0 2px 4px #6a787e;">
                     <h5>Custo médio/veículo</h5>
                     <p style="font-size:28px; font-weight:bold; color:#e98d2c;">{custo_por_veiculo}</p>
-                    <p style="color:#151819;">Atualizado às {datetime.today().strftime('%H:%M')}</p>
                 </div>
             """, unsafe_allow_html=True)
 
         with col3:
             st.markdown(f"""
-                <div style="background-color:#e9f7fd; height: 200px; padding:20px; border-radius:10px;
+                <div style="background-color:#e9f7fd; height: 150px; padding:20px; border-radius:10px;
                 border: 1.5px solid #94a8b0; box-shadow:0 2px 4px #6a787e;">
                     <h5>Custo médio/litro</h5>
                     <p style="font-size:28px; font-weight:bold; color:#e98d2c;">{custo_por_litro}</p>
-                    <p style="color:#151819;">Atualizado às {datetime.today().strftime('%H:%M')}</p>
                 </div>
             """, unsafe_allow_html=True)
 
         with col4:
             st.markdown(f"""
-                <div style="background-color:#e9f7fd; height: 200px; padding:20px; border-radius:10px;
+                <div style="background-color:#e9f7fd; height: 150px; padding:20px; border-radius:10px;
                 border: 1.5px solid #94a8b0; box-shadow:0 2px 4px #6a787e;">
-                    <h5>Consumo total em litros</h5>
+                    <h5>Consumo em litros</h5>
                     <p style="font-size:28px; font-weight:bold; color:#e98d2c;">{valor_litros}</p>
-                    <p style="color:#151819;">Atualizado às {datetime.today().strftime('%H:%M')}</p>
                 </div>
             """, unsafe_allow_html=True)
 
     def apresentar_grafico(self, df_filtrado):
         st.markdown('---')
-        col1, col2, col3 = st.columns(3)
+        col1, col2 = st.columns(2, border=True)
 
         with st.container(border=True):
             with col1:
-                st.subheader('Consumo mensal em litros')
-                df_litro_mes = df_filtrado.groupby('MES_ANO')['LITROS'].sum().reset_index()
-                fig = px.bar(df_litro_mes, x='MES_ANO', y='LITROS', text='LITROS')
-                fig.update_layout(xaxis_title='Mês', yaxis_title='Litros', xaxis=dict(
-                    tickmode='array', tickvals=df_litro_mes['MES_ANO'].tolist(), ticktext=df_litro_mes['MES_ANO'].tolist()))
-                fig.update_traces(textposition='outside')
+                st.subheader('Custo mensal')
+                df_litro_mes = df_filtrado.groupby('MES_ANO')['VALOR EMISSAO'].sum().reset_index()
+                df_litro_mes['VALOR_FMT'] = df_litro_mes['VALOR EMISSAO'].apply(
+                    lambda x: f"R$ {x:,.2f}".replace(",", "X").replace(".", ",").replace("X", ".")
+                )
+                fig = px.bar(df_litro_mes, x='MES_ANO', y='VALOR EMISSAO', text='VALOR_FMT')
+                fig.update_traces(textposition='outside', textfont=dict(color='black'))
+                fig.update_layout(
+                    xaxis_title='Mês',
+                    yaxis_title='Valor',
+                    xaxis_title_font=dict(size=12),
+                    xaxis_tickfont=dict(size=12),
+                    xaxis=dict(
+                        tickmode='array',
+                        tickvals=df_litro_mes['MES_ANO'].tolist(),
+                        ticktext=df_litro_mes['MES_ANO'].tolist()
+                    ),
+                    yaxis=dict(
+                        visible=False,
+                        tickvals=df_litro_mes['VALOR EMISSAO'],
+                        ticktext=df_litro_mes['VALOR EMISSAO'].apply(
+                            lambda x: f"R$ {x:,.2f}".replace(",", "X").replace(".", ",").replace("X", ".")
+                        )
+                    )
+                )
                 st.plotly_chart(fig)
 
             with col2:
+                st.subheader('Consumo mensal em litros')
+                df_litro_mes = df_filtrado.groupby('MES_ANO')['LITROS'].sum().reset_index()
+                fig = px.bar(df_litro_mes, x='MES_ANO', y='LITROS', text='LITROS')
+                fig.update_layout(xaxis_title='Mês', yaxis_title='Litros',
+                                  xaxis=dict(tickmode='array', tickvals=df_litro_mes['MES_ANO'].tolist(),
+                                             ticktext=df_litro_mes['MES_ANO'].tolist()), yaxis=dict(visible=False))
+                fig.update_traces(textposition='outside', textfont=dict(color='black'))
+                st.plotly_chart(fig)
+
+        col3, col4 = st.columns(2, border=True)
+
+        with st.container(border=True):
+            with col3:
                 st.subheader('Litros/tipo de combustível')
                 df_litro_tipo = df_filtrado.groupby('TIPO COMBUSTIVEL')['LITROS'].sum().reset_index()
                 fig = px.pie(df_litro_tipo, names='TIPO COMBUSTIVEL', values='LITROS')
                 fig.update_layout(xaxis_title='Mês', yaxis_title='Litros')
                 st.plotly_chart(fig)
 
-            with col3:
-                st.subheader('Custo mensal')
-                df_litro_mes = df_filtrado.groupby('MES_ANO')['VALOR EMISSAO'].sum().reset_index()
-                fig = px.bar(df_litro_mes, x='MES_ANO', y='VALOR EMISSAO', text='VALOR EMISSAO')
-                fig.update_layout(xaxis_title='Mês', yaxis_title='Litros', xaxis=dict(
-                    tickmode='array', tickvals=df_litro_mes['MES_ANO'].tolist(),
-                    ticktext=df_litro_mes['MES_ANO'].tolist()))
-                fig.update_traces(textposition='outside')
+            with col4:
+                st.subheader('% custo por empresa')
+                df_litro_tipo = df_filtrado.groupby('NOME REDUZIDO')['VALOR EMISSAO'].sum().reset_index()
+                fig = px.pie(df_litro_tipo, names='NOME REDUZIDO', values='VALOR EMISSAO')
+                fig.update_layout(xaxis_title='Mês', yaxis_title='Litros')
                 st.plotly_chart(fig)
 
     def apresentar_tabela(self, df_filtrado):
@@ -222,16 +246,18 @@ class Dashboard:
             'NOME ESTABELECIMENTO': 'Posto'
         }, inplace=True)
 
+        df_filtrado = df_filtrado[['Data', 'Placa', 'Modelo', 'Combustível', 'Valor', 'Vl/Litro', 'Litros', 'Empresa',
+                                   'Matrícula', 'Motorista', 'Hodômetro', 'Km rodado', 'KM/Litro', 'Posto']]
+
         df_filtrado['Data'] = df_filtrado['Data'].dt.strftime('%d/%m/%Y %H:%M:%S')
-        df_filtrado = df_filtrado.drop(columns='MES_ANO')
+        #df_filtrado = df_filtrado.drop(columns='MES_ANO')
 
         lista_reais = ['Vl/Litro', 'Valor']
         for col in lista_reais:
             df_filtrado[col] = df_filtrado[col].apply(lambda x: f'R$ {x:,.2f}'.replace(',', 'X')
                                                     .replace('.', ',').replace('X', '.'))
 
-        if st.toggle("Mostrar tabela"):
-            st.dataframe(df_filtrado, hide_index=True)
+        st.dataframe(df_filtrado, hide_index=True)
 
     def ativar_funcoes(self):
         df_filtrado = self.aplicar_filtros()
